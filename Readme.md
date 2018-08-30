@@ -1,7 +1,7 @@
 # Личный проект «Кэндишоп» [![Build status][travis-image]][travis-url]
 
 * Студент: [Маргарита Еремина](https://up.htmlacademy.ru/javascript/15/user/407511).
-* Наставник: `Неизвестно`.
+* Наставник: `Без наставника`.
 
 ---
 
