@@ -133,8 +133,8 @@
       </aside>
 
       <div class="catalog__cards-wrap">
-        <div class="catalog__cards catalog__cards--load">
-          <p class="catalog__load">Данные загружаются...</p>
+        <div class="catalog__cards">
+          <p class="catalog__load visually-hidden">Данные загружаются...</p>
         </div>
 
         <a class="catalog__btn-more visually-hidden" href="#">Покажи ещё 6</a>
@@ -150,8 +150,8 @@
             <h2 class="group-title goods__title" id="basket">Твои покупки</h2>
             <div class="goods__card-wrap">
 
-              <div class="goods__cards goods__cards--empty">
-                <div class="goods__card-empty">
+              <div class="goods__cards">
+                <div class="goods__card-empty visually-hidden">
                   <p><b>Странно, ты ещё ничего не добавил.</b></p>
                   <p>У нас столько всего вкусного и необычного, обязательно попробуй.</p>
                 </div>
@@ -418,17 +418,17 @@
   </section>
 
   <template id="card">
-    <article class="catalog__card card card--in-stock">
+    <article class="catalog__card card">
       <header class="card__header">
         <h3 class="card__title">Чесночные сливки</h3>
         <img class="card__img" src="img/cards/ice-garlic.jpg" alt="Мороженное со вкусом чеснока" width="265" height="264">
-        <span class="card__price">230 <span class="card__currency">₽</span><span class="card__weight">/ 70 Г</span></span>
+        <span class="card__price"><span class="card__currency">₽</span><span class="card__weight">/ 70 Г</span></span>
       </header>
       <div class="card__main">
         <div class="card__rating">
           <button class="card__btn-composition" type="button">Состав</button>
           <div class="card__stars stars">
-            <span class="stars__rating stars__rating--five">Рейтинг: 5 звёзд</span>
+            <span class="stars__rating">Рейтинг: 5 звёзд</span>
             <span class="star__count">(300)</span>
           </div>
         </div>
@@ -483,5 +483,6 @@
     </div>
   </template>
 
+  <script src="js/goods.js"></script>
 </body>
 </html>
