@@ -1267,11 +1267,16 @@ body {
   font-size: 0;
   border-radius: 50%;
 }
+
+.range__btn:hover {
+  cursor: pointer;
+}
+
 .range__btn--left {
   left: 15%;
 }
 .range__btn--right {
-  right: 15%;
+  left: 85%;
 }
 .range__fill-line {
   position: absolute;
