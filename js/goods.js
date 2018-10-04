@@ -6,8 +6,10 @@ var GOODS_INGREDIENTS = ['молоко', 'сливки', 'вода', 'пищев
 
 var GOODS_IDS = ['gum-cedar', 'gum-chile', 'gum-eggplant', 'gum-mustard', 'gum-portwine', 'gum-wasabi', 'ice-cucumber', 'ice-eggplant', 'ice-garlic', 'ice-italian', 'ice-mushroom', 'ice-pig', 'marmalade-beer', 'marmalade-caviar', 'marmalade-corn', 'marmalade-new-year', 'marmalade-sour', 'marshmallow-bacon', 'marshmallow-shrimp', 'marshmallow-beer', 'soda-russian', 'soda-peanut-grapes', 'soda-garlic', 'soda-cob', 'soda-celery', 'soda-bacon', 'marshmallow-wine', 'marshmallow-spicy'];
 
+var MIN_POS_X = 0;
+var MAX_POS_X = 245;
+
 var goodsCount = 24;
-var minPrice = 0;
 var maxPrice = 100;
 
 var productCardTemplate = document.querySelector('#card').content.querySelector('.catalog__card');
@@ -46,8 +48,9 @@ var courierDeliveryDescriptonElement = courierDeliveryElement.querySelector('.de
 var courierDeliveryFloorElement = courierDeliveryElement.querySelector('#deliver__floor');
 var rangeFilterElement = document.querySelector('.range__filter');
 var rangeBtnElements = rangeFilterElement.querySelectorAll('.range__btn');
-var rangeMinPriceElement = rangeFilterElement.querySelector('.range__price--min');
-var rangeMaxPriceElement = rangeFilterElement.querySelector('.range__price--max');
+var rangePricesElement = document.querySelector('.range__prices');
+var rangeMinPriceElement = rangePricesElement.querySelector('.range__price--min');
+var rangeMaxPriceElement = rangePricesElement.querySelector('.range__price--max');
 var rangeLeftBtnElement = rangeFilterElement.querySelector('.range__btn--left');
 var rangeRightBtnElement = rangeFilterElement.querySelector('.range__btn--right');
 var rangeLineFillElement = rangeFilterElement.querySelector('.range__fill-line');
@@ -691,44 +694,78 @@ var showStoreMap = function (evt) {
 // Добавляет обработчик события клик на поле выбора пункта самовывоза в блоке доставки
 storeDeliveryElement.addEventListener('change', showStoreMap);
 
-// Добавляет на ползунки фильтра цены обработчики события отпускания кнопки мыши
+// Механизм перетаскивания ползунков фильтра по цене
 var addRangeBtnHandlers = function () {
   for (var i = 0; i < rangeBtnElements.length; i++) {
-    rangeBtnElements[i].addEventListener('mouseup', changePriceRange);
+    rangeBtnElements[i].addEventListener('mousedown', function (evt) {
+      evt.preventDefault();
+
+      var startCoords = {
+        x: evt.clientX,
+        y: evt.target.offsetTop
+      };
+
+      var onMouseMove = function (moveEvt) {
+        moveEvt.preventDefault();
+        var shift = {
+          x: startCoords.x - moveEvt.clientX,
+          y: 0
+        };
+
+        startCoords = {
+          x: moveEvt.clientX,
+          y: evt.target.offsetTop
+        };
+
+        evt.target.style.left = (evt.target.offsetLeft - shift.x) + 'px';
+        evt.target.style.top = evt.target.offsetTop + 'px';
+        limitRangeBtnMovement(evt.target);
+        setPriceValue(evt.target);
+        changeRangeLineFill();
+      };
+
+      var onMouseUp = function (upEvt) {
+        upEvt.preventDefault();
+        setPriceValue(evt.target);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
   }
 };
 
-// Изменяет значение цены при перемещении ползунка фильтра по цене
-var changePriceRange = function (evt) {
-  var positionX = evt.target.offsetLeft;
-  var priceValue = (positionX * maxPrice) / rangeWidth;
-  checkRangeBtnPosition(evt.target);
-  evt.target.style.left = positionX + 'px';
-  rangeLineFillElement.style.left = rangeLeftBtnElement.style.left;
-  rangeLineFillElement.style.right = (rangeWidth - parseInt(rangeRightBtnElement.style.left, 10)) + 'px';
+// Ограничивает область перетаскивания ползунков фильтра по цене
+var limitRangeBtnMovement = function (btn) {
+  if (btn.offsetLeft < MIN_POS_X) {
+    btn.style.left = MIN_POS_X + 'px';
+  } else if (btn.offsetLeft > MAX_POS_X) {
+    btn.style.left = MAX_POS_X + 'px';
+  } else if (btn === rangeLeftBtnElement && btn.offsetLeft > rangeRightBtnElement.offsetLeft) {
+    btn.style.left = rangeRightBtnElement.offsetLeft + 'px';
+  } else if (btn === rangeRightBtnElement && btn.offsetLeft < rangeLeftBtnElement.offsetLeft) {
+    btn.style.left = rangeLeftBtnElement.offsetLeft + 'px';
+  }
+};
 
-  if (evt.target === rangeLeftBtnElement) {
+// Изменяет значение полей мминимальной и максимальной цены при перемещении ползунка фильтра по цене
+var setPriceValue = function (btn) {
+  var positionX = btn.offsetLeft;
+  var priceValue = (positionX * maxPrice) / rangeWidth;
+
+  if (btn === rangeLeftBtnElement) {
     rangeMinPriceElement.textContent = parseInt(priceValue, 10);
-  } else {
+  } else if (btn === rangeRightBtnElement) {
     rangeMaxPriceElement.textContent = parseInt(priceValue, 10);
   }
 };
 
-// Ограничивает область перетскивания ползунков фильтра по цене
-var checkRangeBtnPosition = function (btn) {
-  if (btn.offsetLeft < minPrice) {
-    btn.style.left = minPrice + 'px';
-  } else if (btn.offsetLeft > rangeWidth) {
-    btn.style.right = rangeWidth + 'px';
-  } else if (btn === rangeLeftBtnElement) {
-    if (btn.offsetLeft > rangeRightBtnElement.offsetLeft) {
-      btn.style.left = rangeRightBtnElement.offsetLeft + 'px';
-    }
-  } else if (btn === rangeRightBtnElement) {
-    if (btn.offsetLeft < rangeLeftBtnElement.offsetLeft) {
-      btn.style.right = rangeLeftBtnElement.offsetLeft + 'px';
-    }
-  }
+// Устанавливает размеры полосы заливки между ползунками фильтра по цене
+var changeRangeLineFill = function () {
+  rangeLineFillElement.style.left = rangeLeftBtnElement.style.left;
+  rangeLineFillElement.style.right = (rangeWidth - parseInt(rangeRightBtnElement.style.left, 10)) + 'px';
 };
 
 // Удаляет карточки товров
@@ -756,6 +793,8 @@ var setPageActive = function () {
   addPaymentMethodToggleClickHandler();
   addDeliveryMethodToggleClickHandler();
   addRangeBtnHandlers();
+  setPriceValue(rangeLeftBtnElement);
+  setPriceValue(rangeRightBtnElement);
 };
 
 setPageDefault();
