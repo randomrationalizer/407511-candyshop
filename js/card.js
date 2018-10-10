@@ -20,10 +20,11 @@
       }
       cardElement.classList.add(productAvailability);
 
-      cardElement.querySelector('.card__img').src = product.photo;
+      cardElement.querySelector('.card__img').src = 'img/cards/' + product.picture;
+      cardElement.querySelector('.card__img').alt = product.kind + ' ' + product.name;
       cardElement.querySelector('.card__title').textContent = product.name;
       cardElement.querySelector('.card__price').insertAdjacentText('afterbegin', product.price + ' ');
-      cardElement.querySelector('.card__weight').textContent = product.weight + ' Г';
+      cardElement.querySelector('.card__weight').textContent = '/ ' + product.weight + ' Г';
       var starsRating = '';
       if (product.rating.value === 1) {
         starsRating = 'stars__rating--one';
@@ -51,7 +52,8 @@
     createProductInCartElement: function (productInCart) {
       var productInCartElement = productInCartTemplate.cloneNode(true);
       productInCartElement.querySelector('.card-order__title').textContent = productInCart.name;
-      productInCartElement.querySelector('img').src = productInCart.photo;
+      productInCartElement.querySelector('img').src = 'img/cards/' + productInCart.picture;
+      productInCartElement.querySelector('img').alt = productInCart.kind + ' ' + productInCart.name;
       productInCartElement.querySelector('.card-order__count').name = productInCart.id;
       productInCartElement.querySelector('.card-order__count').value = '' + productInCart.orderedAmount;
       productInCartElement.querySelector('.card-order__count').id = 'card-order__' + productInCart.id;

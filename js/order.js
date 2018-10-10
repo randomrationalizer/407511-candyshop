@@ -2,12 +2,17 @@
 
 'use strict';
 (function () {
-  var orderFormInputElements = document.querySelector('.order').querySelectorAll('input');
-  var formSubmitBtnElement = document.querySelector('.buy__submit-btn');
-  var telInputElement = document.querySelector('#contact-data__tel');
-  var nameInputElement = document.querySelector('#contact-data__name');
-  var paymentMethodsToggleElement = document.querySelector('.payment__method');
-  var paymentCardElement = document.querySelector('.payment__card-wrap');
+  var orderFormElement = document.querySelector('.buy').querySelector('form');
+  var formSubmitBtnElement = orderFormElement.querySelector('.buy__submit-btn');
+  var orderDetailsElement = orderFormElement.querySelector('.order');
+  var orderFormInputElements = orderDetailsElement.querySelectorAll('input');
+  var telInputElement = orderDetailsElement.querySelector('#contact-data__tel');
+  var nameInputElement = orderDetailsElement.querySelector('#contact-data__name');
+  var paymentMethodsToggleElement = orderDetailsElement.querySelector('.payment__method');
+  var cardPaymentTogglerElement = paymentMethodsToggleElement.querySelector('#payment__card');
+  var cashPaymentTogglerElement = paymentMethodsToggleElement.querySelector('#payment__cash');
+  var paymentMethodToggleBtnsElements = paymentMethodsToggleElement.querySelectorAll('input');
+  var paymentCardElement = orderDetailsElement.querySelector('.payment__card-wrap');
   var cardInputElements = paymentCardElement .querySelectorAll('input');
   var cardDataElement = paymentCardElement.querySelector('.payment__inputs');
   var cardNumberInputElement = cardDataElement.querySelector('#payment__card-number');
@@ -16,79 +21,81 @@
   var cardCvcInputElement = cardDataElement.querySelector('#payment__card-cvc');
   var cardErrorMsgElement = cardDataElement.querySelector('.payment__error-message');
   var cardStatusElement = cardDataElement.querySelector('.payment__card-status');
-  var paymentCashElement = document.querySelector('.payment__cash-wrap');
-  var deliveryMethodsToggleElement = document.querySelector('.deliver__toggle');
-  var storeDeliveryToggler = deliveryMethodsToggleElement.querySelector('#deliver__store');
-  var courierDeliveryToggler = deliveryMethodsToggleElement.querySelector('#deliver__courie');
-  var storeDeliveryElement = document.querySelector('.deliver__store');
+  var paymentCashElement = orderDetailsElement.querySelector('.payment__cash-wrap');
+  var deliveryDetailsElement = orderDetailsElement.querySelector('.deliver');
+  var deliveryMethodsToggleElement = deliveryDetailsElement.querySelector('.deliver__toggle');
+  var deliveryMethodToggleBtnsElements = deliveryMethodsToggleElement.querySelectorAll('input');
+  var storeDeliveryTogglerElement = deliveryMethodsToggleElement.querySelector('#deliver__store');
+  var courierDeliveryTogglerElement = deliveryMethodsToggleElement.querySelector('#deliver__courier');
+  var storeDeliveryElement = deliveryDetailsElement.querySelector('.deliver__store');
   var storeDeliveryInputElements = storeDeliveryElement.querySelectorAll('input');
   var storeDeliveryMapImgElement = storeDeliveryElement.querySelector('.deliver__store-map-img');
-  var courierDeliveryElement = document.querySelector('.deliver__courier');
+  var courierDeliveryElement = deliveryDetailsElement.querySelector('.deliver__courier');
   var courierDeliveryInputElements = courierDeliveryElement.querySelectorAll('input');
   var courierDeliveryDescriptonElement = courierDeliveryElement.querySelector('.deliver__textarea');
   var courierDeliveryFloorElement = courierDeliveryElement.querySelector('#deliver__floor');
+  var modalSuccessElement = document.querySelector('.modal--success');
+  var modalCloseBtnElement = modalSuccessElement.querySelector('.modal__close');
 
   // Блокирует поля формы из коллекции
-  var blockInputFileds = function (inputFields, isBlocked) {
-    if (isBlocked) {
-      for (var i = 0; i < inputFields.length; i++) {
-        inputFields[i].setAttribute('disabled', 'true');
-        inputFields[i].removeAttribute('required');
-      }
-    } else if (!isBlocked) {
-      for (var j = 0; j < inputFields.length; j++) {
-        inputFields[j].removeAttribute('disabled');
-        inputFields[j].setAttribute('required', 'true');
-      }
+  var blockInputFileds = function (inputFields) {
+    for (var i = 0; i < inputFields.length; i++) {
+      inputFields[i].setAttribute('disabled', 'true');
+      inputFields[i].removeAttribute('required');
+    }
+  };
+
+  // Разблокирует поля формы из коллекции
+  var unlockInputFileds = function (inputFields) {
+    for (var j = 0; j < inputFields.length; j++) {
+      inputFields[j].removeAttribute('disabled');
+      inputFields[j].setAttribute('required', 'true');
     }
   };
 
   // Показывает/скрывает лишние блоки полей формы при выборе способа оплаты
-  var togglePaymentMethod = function (evt) {
-    if (evt.target.name === 'pay-method') {
-      if (evt.target.id === 'payment__card') {
-        paymentCardElement.classList.remove('visually-hidden');
-        paymentCashElement.classList.add('visually-hidden');
-        blockInputFileds(cardInputElements, false);
-      } else if (evt.target.id === 'payment__cash') {
-        paymentCardElement.classList.add('visually-hidden');
-        paymentCashElement.classList.remove('visually-hidden');
-        blockInputFileds(cardInputElements, true);
-      }
+  var togglePaymentMethod = function () {
+    if (cardPaymentTogglerElement.checked) {
+      paymentCardElement.classList.remove('visually-hidden');
+      paymentCashElement.classList.add('visually-hidden');
+      unlockInputFileds(cardInputElements);
+    } else if (cashPaymentTogglerElement.checked) {
+      paymentCardElement.classList.add('visually-hidden');
+      paymentCashElement.classList.remove('visually-hidden');
+      blockInputFileds(cardInputElements);
     }
   };
 
-  // Добавляет на блок формы оплаты обработчик, регистрирующий клик по кнопке со способом оплаты
-  // var addPaymentMethodToggleClickHandler = function () {
-  //   paymentMethodsToggleElement.addEventListener('click', togglePaymentMethod);
-  // };
-  paymentMethodsToggleElement.addEventListener('click', togglePaymentMethod);
+  // Добавляет на кнопки выбора формы оплаты обработчик события клик
+  var addPaymentMethodToggleClickHandlers = function () {
+    for (var i = 0; i < paymentMethodToggleBtnsElements.length; i++) {
+      paymentMethodToggleBtnsElements[i].addEventListener('click', togglePaymentMethod);
+    }
+  };
 
   // Показывает/скрывает лишние блоки полей формы при выборе способа доставки
-  var toggleDeliveryMethod = function (evt) {
-    if (evt.target.name === 'method-deliver') {
-      if (evt.target.id === 'deliver__store') {
-        storeDeliveryElement.classList.remove('visually-hidden');
-        courierDeliveryElement.classList.add('visually-hidden');
-        blockInputFileds(courierDeliveryInputElements, true);
-        blockInputFileds(storeDeliveryInputElements, false);
-        courierDeliveryDescriptonElement.setAttribute('disabled', 'true');
-      } else if (evt.target.id === 'deliver__courier') {
-        storeDeliveryElement.classList.add('visually-hidden');
-        courierDeliveryElement.classList.remove('visually-hidden');
-        blockInputFileds(courierDeliveryInputElements, false);
-        blockInputFileds(storeDeliveryInputElements, true);
-        courierDeliveryDescriptonElement.removeAttribute('disabled');
-      }
+  var toggleDeliveryMethod = function () {
+    if (storeDeliveryTogglerElement.checked) {
+      storeDeliveryElement.classList.remove('visually-hidden');
+      courierDeliveryElement.classList.add('visually-hidden');
+      blockInputFileds(courierDeliveryInputElements);
+      unlockInputFileds(storeDeliveryInputElements);
+      courierDeliveryDescriptonElement.setAttribute('disabled', 'true');
+    } else if (courierDeliveryTogglerElement.checked) {
+      storeDeliveryElement.classList.add('visually-hidden');
+      courierDeliveryElement.classList.remove('visually-hidden');
+      unlockInputFileds(courierDeliveryInputElements);
+      blockInputFileds(storeDeliveryInputElements);
+      courierDeliveryDescriptonElement.removeAttribute('disabled');
     }
   };
 
-  // Добавляет на блок выбора способа доставки обработчик, регистрирующий клик по кнопке со способом доставки
-  // var addDeliveryMethodToggleClickHandler = function () {
-  //   deliveryMethodsToggleElement.addEventListener('click', toggleDeliveryMethod);
-  // };
-  deliveryMethodsToggleElement.addEventListener('click', toggleDeliveryMethod);
-
+  // Добавляет на кнопки выбора способа доставки обработчик события клик
+  var addDeliveryMethodToggleClickHandlers = function () {
+    for (var i = 0; i < deliveryMethodToggleBtnsElements.length; i++) {
+      deliveryMethodToggleBtnsElements[i].addEventListener('click', toggleDeliveryMethod);
+    }
+  };
 
   // Добавляет обработчик валидации для поля телефона
   telInputElement.addEventListener('input', function (evt) {
@@ -143,7 +150,7 @@
   cardNumberInputElement.addEventListener('input', checkCardNumberValidity);
 
   // Добавляет обработчик валидности для поля срок действия карты
-  cardDateInputElement.addEventListener('invalid', function (evt) {
+  cardDateInputElement.addEventListener('input', function (evt) {
     if (evt.target.validity.patternMismatch) {
       evt.target.setCustomValidity('Введите срок действия карты в формате мм/гг');
     } else {
@@ -187,6 +194,14 @@
     }
   };
 
+  // Задает для блока 'Статус карты' значения по умолчанию
+  var setCardStatusDefault = function () {
+    cardStatusElement.textContent = 'Не определён';
+    cardStatusElement.classList.remove('payment__card-status--active');
+    cardStatusElement.classList.remove('payment__card-status--not-active');
+    cardErrorMsgElement.classList.add('visually-hidden');
+  };
+
   // Добавляет обработчик события 'ввод' на блок с полями данных карты, показывающий статус карты
   cardDataElement.addEventListener('input', checkCardStatus);
 
@@ -211,31 +226,81 @@
   // Добавляет обработчик события клик на поле выбора пункта самовывоза в блоке доставки
   storeDeliveryElement.addEventListener('change', showStoreMap);
 
+  // Показывает модальное окно с сообщением об успешной отправке формы
+  var showSuccessMsg = function () {
+    modalSuccessElement.classList.remove('modal--hidden');
+    modalCloseBtnElement.addEventListener('click', hideSuccessMsg);
+    document.addEventListener('keydown', onEscPress);
+  };
+
+  // Скрывает модальное окно с сообщением об успешной отправке формы
+  // При закрытии окна удаляются все товары из корзины, сбрасываются значения полей формы заказа, форма блокируется
+  var hideSuccessMsg = function () {
+    modalSuccessElement.classList.add('modal--hidden');
+    window.cart.clearCart();
+    window.order.resetOrderForm();
+    window.order.deactivateOrderForm();
+    modalCloseBtnElement.removeEventListener('click', hideSuccessMsg);
+    document.removeEventListener('keydown', onEscPress);
+  };
+
+  // Закрывает модальное окно по нажатию Esc
+  var onEscPress = function (evt) {
+    window.util.isEscEvent(evt, hideSuccessMsg);
+  };
+
+  // Отправляет данные формы на сервер
+  var onOrderFormSubmit = function (evt) {
+    window.backend.upload(new FormData(orderFormElement), showSuccessMsg, window.util.showErrorMessage);
+    evt.preventDefault();
+  };
+
+  // Добавляет обработчик события отправки формы
+  orderFormElement.addEventListener('submit', onOrderFormSubmit);
+  addPaymentMethodToggleClickHandlers();
+  addDeliveryMethodToggleClickHandlers();
+
   window.order = {
-    // Блокирует/разблокирует поля формы заказа в зависимости от того, есть ли в корзине товар
-    orderFormFieldsDisable: function (isCartEmpty) {
-      if (isCartEmpty) {
-        for (var i = 0; i < orderFormInputElements.length; i++) {
-          orderFormInputElements[i].disabled = true;
-        }
-        window.util.disableBtn(formSubmitBtnElement, true);
-      } else {
-        for (var j = 0; j < orderFormInputElements.length; j++) {
-          orderFormInputElements[j].disabled = false;
-        }
-        window.util.disableBtn(formSubmitBtnElement, false);
+    // Блокирует форму заказа
+    deactivateOrderForm: function () {
+      for (var i = 0; i < orderFormInputElements.length; i++) {
+        orderFormInputElements[i].setAttribute('disabled', 'true');
       }
+      courierDeliveryDescriptonElement.setAttribute('disabled', 'true');
+      formSubmitBtnElement.setAttribute('disabled', 'true');
     },
 
-    // Устанавливает для полей доставки значения аттрибутов disabled и required по умолчанию
-    setDeliveryFieldsDefault: function () {
-      if (storeDeliveryToggler.checked) {
-        blockInputFileds(courierDeliveryInputElements, true);
-        courierDeliveryDescriptonElement.setAttribute('disabled', 'true');
-      } else if (courierDeliveryToggler.checked) {
-        blockInputFileds(storeDeliveryInputElements, true);
-        courierDeliveryDescriptonElement.removeAttribute('disabled');
+    // Активирует форму заказа
+    activateORderForm: function () {
+      for (var j = 0; j < orderFormInputElements.length; j++) {
+        orderFormInputElements[j].removeAttribute('disabled');
       }
+      courierDeliveryDescriptonElement.removeAttribute('disabled');
+      formSubmitBtnElement.removeAttribute('disabled');
+    },
+
+    // Устанавливает для полей доставки значения по умолчанию
+    setDeliveryFieldsDefault: function () {
+      storeDeliveryTogglerElement.checked = true;
+      storeDeliveryElement.querySelector('#store-academicheskaya').checked = true;
+      toggleDeliveryMethod();
+    },
+
+    // Устанавливает для полей способа оплаты значения по умолчанию
+    setPaymentFieldsDefault: function () {
+      paymentMethodsToggleElement.querySelector('#payment__card').checked = true;
+      togglePaymentMethod();
+    },
+
+    // Сбрасывает значения полей формы на значения по умолчанию
+    resetOrderForm: function () {
+      for (var i = 0; i < orderFormInputElements.length; i++) {
+        orderFormInputElements[i].value = '';
+      }
+      window.order.setPaymentFieldsDefault();
+      setCardStatusDefault();
+      window.order.setDeliveryFieldsDefault();
+      courierDeliveryDescriptonElement.value = '';
     }
   };
 })();
