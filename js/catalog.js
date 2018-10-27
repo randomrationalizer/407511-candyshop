@@ -5,19 +5,10 @@
 (function () {
   var catalogListElement = document.querySelector('.catalog__cards');
   var catalogLoadMsgElement = document.querySelector('.catalog__load');
-  var rangeLeftBtnElement = document.querySelector('.range__btn--left');
-  var rangeRightBtnElement = document.querySelector('.range__btn--right');
 
-  // Отрисовывает карточки товаров на страницу каталога
-  var renderProductCards = function (data) {
-    // Записывает загруженные данные в массив товаров productsArray
-    window.data.productsArray = data;
-    var fragment = document.createDocumentFragment();
-    for (var i = 0; i < data.length; i++) {
-      fragment.appendChild(window.card.createCardElement(data[i]));
-    }
-    catalogListElement.appendChild(fragment);
-    hideCardsLoadingMsg();
+  // Записывает загруженные с сервера данные товаров в массив товаров productsArray
+  var createProductsArray = function (productsData) {
+    window.data.productsArray = productsData;
   };
 
   // Показывает сообщение о загрузке списка товаров в каталоге
@@ -42,17 +33,41 @@
     catalogListElement.addEventListener('click', window.cart.addProductInCart);
   };
 
-  // Удаляет все карточки товров в каталоге
-  var deleteProductCards = function () {
+  // Помечает карточки товаров, добаленных в избранное
+  var markFavoriteProducts = function () {
     var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-    for (var i = 0; i < catalogCards.length; i++) {
-      catalogListElement.removeChild(catalogCards[i]);
+    window.data.favoriteProductsArray.forEach(function (product) {
+      var productCard = window.card.findRelevantCatalogCard(catalogCards, product.name);
+      if (Boolean(productCard) === true) {
+        productCard.querySelector('.card__btn-favorite').classList.add('card__btn-favorite--selected');
+      }
+    });
+  };
+
+  window.catalog = {
+    // Отрисовывает карточки товаров на страницу каталога
+    renderProductCards: function (products) {
+      var fragment = document.createDocumentFragment();
+      for (var i = 0; i < products.length; i++) {
+        fragment.appendChild(window.card.createCardElement(products[i]));
+      }
+      catalogListElement.appendChild(fragment);
+      markFavoriteProducts();
+      hideCardsLoadingMsg();
+    },
+
+    // Удаляет все карточки товров в каталоге
+    deleteProductCards: function () {
+      var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
+      for (var i = 0; i < catalogCards.length; i++) {
+        catalogListElement.removeChild(catalogCards[i]);
+      }
     }
   };
 
   // Переключает страницу в исходное состояние: карточки товаров не отрисованы, корзина пуста, форма неактивна
   var setPageDefault = function () {
-    deleteProductCards();
+    window.catalog.deleteProductCards();
     showCardsLoadingMsg();
     window.cart.showEmptyCartMsg();
     window.order.setPaymentFieldsDefault();
@@ -61,15 +76,18 @@
   };
 
   // Переключает страницу в активное состояние (карточки загрузились)
-  var setPageActive = function () {
-    window.backend.download(renderProductCards, window.util.showErrorMessage);
+  var setPageActive = function (data) {
+    createProductsArray(data);
+    window.catalog.renderProductCards(window.data.productsArray);
     addFavoriteBtnsClickHandler();
     addInCartBtnsClickHandler();
-    window.filter.setPriceValue(rangeLeftBtnElement);
-    window.filter.setPriceValue(rangeRightBtnElement);
+    window.filter.setPriceFilterDefault();
+    window.filter.showFilteredItemsCount();
   };
 
   setPageDefault();
-  setPageActive();
+
+  // Загружает с сервера данные товаров
+  window.backend.download(setPageActive, window.util.showErrorMessage);
 
 })();

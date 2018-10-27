@@ -65,6 +65,14 @@
     addProductInFavorite: function (evt) {
       if (evt.target.classList.contains('card__btn-favorite')) {
         evt.target.classList.toggle('card__btn-favorite--selected');
+        var card = evt.target.closest('.catalog__card');
+        var productName = card.querySelector('.card__title').textContent;
+        var productObj = window.data.findRelevantProductObj(window.data.productsArray, productName);
+        if (evt.target.classList.contains('card__btn-favorite--selected')) {
+          window.data.favoriteProductsArray.push(productObj);
+        } else {
+          window.data.favoriteProductsArray.splice(window.data.favoriteProductsArray.indexOf(productObj), 1);
+        }
         evt.target.blur();
       }
     },
