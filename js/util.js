@@ -3,6 +3,7 @@
 'use strict';
 (function () {
   var ESC_KEY_CODE = 27;
+  var DEBOUNCE_INTERVAL = 500;
 
   var modalErrorElement = document.querySelector('.modal--error');
   var modalErrorMessageElement = modalErrorElement.querySelector('.modal__message');
@@ -34,6 +35,21 @@
       modalErrorElement.classList.add('modal--hidden');
       modalCloseBtnElement.removeEventListener('click', window.util.hideErrorMessage);
       document.removeEventListener('keydown', onEscPress);
+    },
+
+    // Функция устранения "дребезга"
+    debounce: function (callback) {
+      var lastTimeout = null;
+
+      return function () {
+        var args = arguments;
+        if (lastTimeout) {
+          window.clearTimeout(lastTimeout);
+        }
+        lastTimeout = window.setTimeout(function () {
+          callback.apply(null, args);
+        }, DEBOUNCE_INTERVAL);
+      };
     }
   };
 })();

@@ -64,7 +64,7 @@
   };
 
   // Отрисовывает карточки товаров в зависимости от выбранных условий фильтра
-  var updateCards = function () {
+  var updateCards = window.util.debounce(function () {
     var cards = window.data.productsArray.slice();
     var filteredCards = cards.filter(function (it) {
       return setProductTypeFilter(it.kind, selectedProductTypes);
@@ -84,7 +84,7 @@
     }
 
     window.catalog.renderProductCards(sortProductsArr(filteredCards));
-  };
+  });
 
   // Сортирует массив товаров в зависимости от выбранного способа сортировки
   var sortProductsArr = function (productsArr) {
@@ -178,7 +178,10 @@
   var showAllCards = function () {
     resetNotStrictFilters();
     resetStrictFilters();
-    updateCards();
+    hideFilterEmptyMsg();
+    window.catalog.deleteProductCards();
+    window.catalog.renderProductCards(window.data.productsArray);
+    // updateCards();
   };
 
   // Добавляет обработчик события клик на кнопку "Показать всё"
@@ -449,12 +452,6 @@
     return product.nutritionFacts[propertyName] === propertiesToNutritionFacts[propertyName];
   };
 
-  // Выводит количество товаров, добавленных в "Избранное", в блок .input-btn__item-count фильтра "Только избранное"
-  var calculateFavoriteItemsCount = function () {
-    var counter = filterFavoriteElement.parentElement.querySelector('.input-btn__item-count');
-    counter.textContent = '(' + window.data.favoriteProductsArray.length + ')';
-  };
-
   // Выводит количество товаров в наличии
   var calculateAvailableItemsCount = function () {
     var counter = filterAvailabilityElement.parentElement.querySelector('.input-btn__item-count');
@@ -474,11 +471,17 @@
       setPriceValue(rangeRightBtnElement);
     },
 
+    // Выводит количество товаров, добавленных в "Избранное", в блок .input-btn__item-count фильтра "Только избранное"
+    calculateFavoriteItemsCount: function () {
+      var counter = filterFavoriteElement.parentElement.querySelector('.input-btn__item-count');
+      counter.textContent = '(' + window.data.favoriteProductsArray.length + ')';
+    },
+
     // Отображает количество товаров, подходящих под фильтры
     showFilteredItemsCount: function () {
       calculateFilteredItemsCount(filterTypeElements, filterByType);
       calculateFilteredItemsCount(filterPropertyElements, filterByIngredients);
-      calculateFavoriteItemsCount();
+      window.filter.calculateFavoriteItemsCount();
       calculateAvailableItemsCount();
     }
   };

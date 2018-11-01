@@ -73,6 +73,7 @@
         } else {
           window.data.favoriteProductsArray.splice(window.data.favoriteProductsArray.indexOf(productObj), 1);
         }
+        window.filter.calculateFavoriteItemsCount();
         evt.target.blur();
       }
     },
