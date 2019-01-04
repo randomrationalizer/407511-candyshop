@@ -4,13 +4,13 @@
 (function () {
   window.data = {
     // Массив товаров. В него добавляются загруженные с сервера данные товаров
-    productsArray: [],
+    products: [],
 
     // Массив товаров в корзине
-    productsInCartArray: [],
+    productsInCart: [],
 
     // Массив товаров, добавленных в "Избранное"
-    favoriteProductsArray: [],
+    favorites: [],
 
     // Создает объект товара, добавленного в корзину
     createOrderedProduct: function (product) {
@@ -26,10 +26,11 @@
     },
 
     // Находит объект товара в массиве товаров по имени
-    findRelevantProductObj: function (arr, productName) {
-      for (var i = 0; i < arr.length; i++) {
-        if (arr[i].name === productName) {
-          var relevantObj = arr[i];
+    findProductObj: function (products, productName) {
+      for (var i = 0; i < products.length; i++) {
+        if (products[i].name === productName) {
+          var relevantObj = products[i];
+          break;
         }
       }
       return relevantObj;

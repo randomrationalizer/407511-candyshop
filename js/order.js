@@ -5,15 +5,15 @@
   var orderFormElement = document.querySelector('.buy').querySelector('form');
   var formSubmitBtnElement = orderFormElement.querySelector('.buy__submit-btn');
   var orderDetailsElement = orderFormElement.querySelector('.order');
-  var orderFormInputElements = orderDetailsElement.querySelectorAll('input');
+  var orderFormInputElements = [].slice.call(orderDetailsElement.querySelectorAll('input'));
   var telInputElement = orderDetailsElement.querySelector('#contact-data__tel');
   var nameInputElement = orderDetailsElement.querySelector('#contact-data__name');
   var paymentMethodsToggleElement = orderDetailsElement.querySelector('.payment__method');
   var cardPaymentTogglerElement = paymentMethodsToggleElement.querySelector('#payment__card');
   var cashPaymentTogglerElement = paymentMethodsToggleElement.querySelector('#payment__cash');
-  var paymentMethodToggleBtnsElements = paymentMethodsToggleElement.querySelectorAll('input');
+  var paymentMethodToggleBtnsElements = [].slice.call(paymentMethodsToggleElement.querySelectorAll('input'));
   var paymentCardElement = orderDetailsElement.querySelector('.payment__card-wrap');
-  var cardInputElements = paymentCardElement .querySelectorAll('input');
+  var cardInputElements = [].slice.call(paymentCardElement .querySelectorAll('input'));
   var cardDataElement = paymentCardElement.querySelector('.payment__inputs');
   var cardNumberInputElement = cardDataElement.querySelector('#payment__card-number');
   var cardDateInputElement = cardDataElement.querySelector('#payment__card-date');
@@ -24,14 +24,14 @@
   var paymentCashElement = orderDetailsElement.querySelector('.payment__cash-wrap');
   var deliveryDetailsElement = orderDetailsElement.querySelector('.deliver');
   var deliveryMethodsToggleElement = deliveryDetailsElement.querySelector('.deliver__toggle');
-  var deliveryMethodToggleBtnsElements = deliveryMethodsToggleElement.querySelectorAll('input');
+  var deliveryMethodToggleBtnsElements = [].slice.call(deliveryMethodsToggleElement.querySelectorAll('input'));
   var storeDeliveryTogglerElement = deliveryMethodsToggleElement.querySelector('#deliver__store');
   var courierDeliveryTogglerElement = deliveryMethodsToggleElement.querySelector('#deliver__courier');
   var storeDeliveryElement = deliveryDetailsElement.querySelector('.deliver__store');
-  var storeDeliveryInputElements = storeDeliveryElement.querySelectorAll('input');
+  var storeDeliveryInputElements = [].slice.call(storeDeliveryElement.querySelectorAll('input'));
   var storeDeliveryMapImgElement = storeDeliveryElement.querySelector('.deliver__store-map-img');
   var courierDeliveryElement = deliveryDetailsElement.querySelector('.deliver__courier');
-  var courierDeliveryInputElements = courierDeliveryElement.querySelectorAll('input');
+  var courierDeliveryInputElements = [].slice.call(courierDeliveryElement.querySelectorAll('input'));
   var courierDeliveryDescriptonElement = courierDeliveryElement.querySelector('.deliver__textarea');
   var courierDeliveryFloorElement = courierDeliveryElement.querySelector('#deliver__floor');
   var modalSuccessElement = document.querySelector('.modal--success');
@@ -39,18 +39,18 @@
 
   // Блокирует поля формы из коллекции
   var blockInputFileds = function (inputFields) {
-    for (var i = 0; i < inputFields.length; i++) {
-      inputFields[i].setAttribute('disabled', 'true');
-      inputFields[i].removeAttribute('required');
-    }
+    inputFields.forEach(function (field) {
+      field.setAttribute('disabled', 'true');
+      field.removeAttribute('required');
+    });
   };
 
   // Разблокирует поля формы из коллекции
   var unlockInputFileds = function (inputFields) {
-    for (var j = 0; j < inputFields.length; j++) {
-      inputFields[j].removeAttribute('disabled');
-      inputFields[j].setAttribute('required', 'true');
-    }
+    inputFields.forEach(function (field) {
+      field.removeAttribute('disabled');
+      field.setAttribute('required', 'true');
+    });
   };
 
   // Показывает/скрывает лишние блоки полей формы при выборе способа оплаты
@@ -68,9 +68,9 @@
 
   // Добавляет на кнопки выбора формы оплаты обработчик события клик
   var addPaymentMethodToggleClickHandlers = function () {
-    for (var i = 0; i < paymentMethodToggleBtnsElements.length; i++) {
-      paymentMethodToggleBtnsElements[i].addEventListener('click', togglePaymentMethod);
-    }
+    paymentMethodToggleBtnsElements.forEach(function (element) {
+      element.addEventListener('click', togglePaymentMethod);
+    });
   };
 
   // Показывает/скрывает лишние блоки полей формы при выборе способа доставки
@@ -92,9 +92,9 @@
 
   // Добавляет на кнопки выбора способа доставки обработчик события клик
   var addDeliveryMethodToggleClickHandlers = function () {
-    for (var i = 0; i < deliveryMethodToggleBtnsElements.length; i++) {
-      deliveryMethodToggleBtnsElements[i].addEventListener('click', toggleDeliveryMethod);
-    }
+    deliveryMethodToggleBtnsElements.forEach(function (button) {
+      button.addEventListener('click', toggleDeliveryMethod);
+    });
   };
 
   // Добавляет обработчик валидации для поля телефона
@@ -226,6 +226,17 @@
   // Добавляет обработчик события клик на поле выбора пункта самовывоза в блоке доставки
   storeDeliveryElement.addEventListener('change', showStoreMap);
 
+  // Сбрасывает значения полей формы на значения по умолчанию
+  var resetOrderForm = function () {
+    orderFormInputElements.forEach(function (element) {
+      element.value = '';
+    });
+    window.order.setPaymentFieldsDefault();
+    setCardStatusDefault();
+    window.order.setDeliveryFieldsDefault();
+    courierDeliveryDescriptonElement.value = '';
+  };
+
   // Показывает модальное окно с сообщением об успешной отправке формы
   var showSuccessMsg = function () {
     modalSuccessElement.classList.remove('modal--hidden');
@@ -237,9 +248,9 @@
   // При закрытии окна удаляются все товары из корзины, сбрасываются значения полей формы заказа, форма блокируется
   var hideSuccessMsg = function () {
     modalSuccessElement.classList.add('modal--hidden');
-    window.cart.clearCart();
-    window.order.resetOrderForm();
-    window.order.deactivateOrderForm();
+    window.cart.clear();
+    resetOrderForm();
+    window.order.deactivateForm();
     modalCloseBtnElement.removeEventListener('click', hideSuccessMsg);
     document.removeEventListener('keydown', onEscPress);
   };
@@ -262,19 +273,19 @@
 
   window.order = {
     // Блокирует форму заказа
-    deactivateOrderForm: function () {
-      for (var i = 0; i < orderFormInputElements.length; i++) {
-        orderFormInputElements[i].setAttribute('disabled', 'true');
-      }
+    deactivateForm: function () {
+      orderFormInputElements.forEach(function (element) {
+        element.setAttribute('disabled', 'true');
+      });
       courierDeliveryDescriptonElement.setAttribute('disabled', 'true');
       formSubmitBtnElement.setAttribute('disabled', 'true');
     },
 
     // Активирует форму заказа
-    activateORderForm: function () {
-      for (var j = 0; j < orderFormInputElements.length; j++) {
-        orderFormInputElements[j].removeAttribute('disabled');
-      }
+    activateForm: function () {
+      orderFormInputElements.forEach(function (element) {
+        element.removeAttribute('disabled');
+      });
       courierDeliveryDescriptonElement.removeAttribute('disabled');
       formSubmitBtnElement.removeAttribute('disabled');
     },
@@ -290,17 +301,6 @@
     setPaymentFieldsDefault: function () {
       paymentMethodsToggleElement.querySelector('#payment__card').checked = true;
       togglePaymentMethod();
-    },
-
-    // Сбрасывает значения полей формы на значения по умолчанию
-    resetOrderForm: function () {
-      for (var i = 0; i < orderFormInputElements.length; i++) {
-        orderFormInputElements[i].value = '';
-      }
-      window.order.setPaymentFieldsDefault();
-      setCardStatusDefault();
-      window.order.setDeliveryFieldsDefault();
-      courierDeliveryDescriptonElement.value = '';
     }
   };
 })();

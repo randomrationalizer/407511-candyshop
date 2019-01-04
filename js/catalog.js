@@ -4,12 +4,7 @@
 
 (function () {
   var catalogListElement = document.querySelector('.catalog__cards');
-  var catalogLoadMsgElement = document.querySelector('.catalog__load');
-
-  // Записывает загруженные с сервера данные товаров в массив товаров productsArray
-  var createProductsArray = function (productsData) {
-    window.data.productsArray = productsData;
-  };
+  var catalogLoadMsgElement = catalogListElement.querySelector('.catalog__load');
 
   // Показывает сообщение о загрузке списка товаров в каталоге
   var showCardsLoadingMsg = function () {
@@ -25,19 +20,18 @@
 
   // Добавляет обработчик события клик на каталог товаров, регистрирующий нажатие кнопки "Добавить в избранное" на карточках товаров
   var addFavoriteBtnsClickHandler = function () {
-    catalogListElement.addEventListener('click', window.card.addProductInFavorite);
+    catalogListElement.addEventListener('click', window.card.addToFavorites);
   };
 
   // Добавляет на блок списка товаров в каталоге обработчик события клик, регистрирующий нажатие кнопки "Добавить в корзину"
   var addInCartBtnsClickHandler = function () {
-    catalogListElement.addEventListener('click', window.cart.addProductInCart);
+    catalogListElement.addEventListener('click', window.cart.addProduct);
   };
 
   // Помечает карточки товаров, добаленных в избранное
   var markFavoriteProducts = function () {
-    var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-    window.data.favoriteProductsArray.forEach(function (product) {
-      var productCard = window.card.findRelevantCatalogCard(catalogCards, product.name);
+    window.data.favorites.forEach(function (product) {
+      var productCard = window.card.findInCatalog(product.name);
       if (Boolean(productCard) === true) {
         productCard.querySelector('.card__btn-favorite').classList.add('card__btn-favorite--selected');
       }
@@ -46,42 +40,42 @@
 
   window.catalog = {
     // Отрисовывает карточки товаров на страницу каталога
-    renderProductCards: function (products) {
+    renderCards: function (products) {
       var fragment = document.createDocumentFragment();
-      for (var i = 0; i < products.length; i++) {
-        fragment.appendChild(window.card.createCardElement(products[i]));
-      }
+      products.forEach(function (product) {
+        fragment.appendChild(window.card.create(product));
+      });
       catalogListElement.appendChild(fragment);
       markFavoriteProducts();
       hideCardsLoadingMsg();
     },
 
     // Удаляет все карточки товров в каталоге
-    deleteProductCards: function () {
-      var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-      for (var i = 0; i < catalogCards.length; i++) {
-        catalogListElement.removeChild(catalogCards[i]);
-      }
+    deleteCards: function () {
+      var catalogCardsElements = [].slice.call(catalogListElement.querySelectorAll('.catalog__card'));
+      catalogCardsElements.forEach(function (card) {
+        catalogListElement.removeChild(card);
+      });
     }
   };
 
   // Переключает страницу в исходное состояние: карточки товаров не отрисованы, корзина пуста, форма неактивна
   var setPageDefault = function () {
-    window.catalog.deleteProductCards();
+    window.catalog.deleteCards();
     showCardsLoadingMsg();
-    window.cart.showEmptyCartMsg();
+    window.cart.showMsgEmpty();
     window.order.setPaymentFieldsDefault();
     window.order.setDeliveryFieldsDefault();
-    window.order.deactivateOrderForm();
+    window.order.deactivateForm();
   };
 
   // Переключает страницу в активное состояние (карточки загрузились)
-  var setPageActive = function (data) {
-    createProductsArray(data);
-    window.catalog.renderProductCards(window.data.productsArray);
+  var setPageActive = function (downloadedProducts) {
+    window.data.products = downloadedProducts;
+    window.catalog.renderCards(window.data.products);
     addFavoriteBtnsClickHandler();
     addInCartBtnsClickHandler();
-    window.filter.setPriceFilterDefault();
+    window.filter.setPriceRangeDefault();
     window.filter.showFilteredItemsCount();
   };
 

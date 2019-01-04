@@ -17,31 +17,25 @@
   // Максимально возможная цена товара
   var maxPrice;
 
-  var catalogFilters = document.querySelector('.catalog__sidebar');
-  var filterTypeElements = [].map.call(catalogFilters.querySelectorAll('.input-btn__input[name="food-type"]'), function (it) {
-    return it;
-  });
-  var filterPropertyElements = [].map.call(catalogFilters.querySelectorAll('.input-btn__input[name="food-property"]'), function (it) {
-    return it;
-  });
-  var filterEmptyMsgTemplate = document.querySelector('#empty-filters').content.querySelector('.catalog__empty-filter');
+  var sidebarElement = document.querySelector('.catalog__sidebar');
+  var filterTypeElements = [].slice.call(sidebarElement.querySelectorAll('.input-btn__input[name="food-type"]'));
+  var filterPropertyElements = [].slice.call(sidebarElement.querySelectorAll('.input-btn__input[name="food-property"]'));
+  var filterEmptyMsgTemplateElement = document.querySelector('#empty-filters').content.querySelector('.catalog__empty-filter');
   var catalogListElement = document.querySelector('.catalog__cards');
-  var filterSortElements = [].map.call(catalogFilters.querySelectorAll('.input-btn__input--radio[name="sort"]'), function (it) {
-    return it;
-  });
-  var filterSortPopularBtnElement = catalogFilters.querySelector('#filter-popular');
-  var filterFavoriteElement = catalogFilters.querySelector('#filter-favorite');
-  var filterAvailabilityElement = catalogFilters.querySelector('#filter-availability');
-  var rangeFilterElement = document.querySelector('.range__filter');
-  var rangeBtnElements = rangeFilterElement.querySelectorAll('.range__btn');
-  var rangePricesElement = document.querySelector('.range__prices');
+  var filterSortElements = [].slice.call(sidebarElement.querySelectorAll('.input-btn__input--radio[name="sort"]'));
+  var filterSortPopularBtnElement = sidebarElement.querySelector('#filter-popular');
+  var filterFavoriteElement = sidebarElement.querySelector('#filter-favorite');
+  var filterAvailabilityElement = sidebarElement.querySelector('#filter-availability');
+  var rangeFilterElement = sidebarElement.querySelector('.range__filter');
+  var rangeBtnElements = [].slice.call(rangeFilterElement.querySelectorAll('.range__btn'));
+  var rangePricesElement = sidebarElement.querySelector('.range__prices');
   var rangeMinPriceElement = rangePricesElement.querySelector('.range__price--min');
   var rangeMaxPriceElement = rangePricesElement.querySelector('.range__price--max');
   var rangeLeftBtnElement = rangeFilterElement.querySelector('.range__btn--left');
   var rangeRightBtnElement = rangeFilterElement.querySelector('.range__btn--right');
   var rangeLineFillElement = rangeFilterElement.querySelector('.range__fill-line');
+  var filterShowAllBtnElement = sidebarElement.querySelector('.catalog__submit');
   var rangeWidth = rangeFilterElement.offsetWidth;
-  var filterShowAllBtnElement = catalogFilters.querySelector('.catalog__submit');
 
   var typeIdToProductKind = {
     'filter-icecream': 'Мороженое',
@@ -65,17 +59,13 @@
 
   // Отрисовывает карточки товаров в зависимости от выбранных условий фильтра
   var updateCards = window.util.debounce(function () {
-    var cards = window.data.productsArray.slice();
+    var cards = window.data.products.slice();
     var filteredCards = cards.filter(function (it) {
-      return setProductTypeFilter(it.kind, selectedProductTypes);
-    }).
-    filter(function (it) {
-      return setPropertyFilter(it.nutritionFacts, selectedProductProperties);
-    }).
-    filter(function (it) {
-      return setProductPriceFilter(it.price, currentMinPrice, currentMaxPrice);
+      return setProductTypeFilter(it.kind, selectedProductTypes) &&
+        setPropertyFilter(it.nutritionFacts, selectedProductProperties) &&
+        setProductPriceFilter(it.price, currentMinPrice, currentMaxPrice);
     });
-    window.catalog.deleteProductCards();
+    window.catalog.deleteCards();
 
     if (filteredCards.length === 0) {
       showFilterEmptyMsg();
@@ -83,30 +73,30 @@
       hideFilterEmptyMsg();
     }
 
-    window.catalog.renderProductCards(sortProductsArr(filteredCards));
+    window.catalog.renderCards(sortProducts(filteredCards));
   });
 
   // Сортирует массив товаров в зависимости от выбранного способа сортировки
-  var sortProductsArr = function (productsArr) {
-    var radioBtnValue = catalogFilters.querySelector('.input-btn__input--radio[name="sort"]:checked').value;
-    var sortedArr;
+  var sortProducts = function (products) {
+    var radioBtnValue = sidebarElement.querySelector('.input-btn__input--radio[name="sort"]:checked').value;
+    var sortedProducts;
 
     switch (radioBtnValue) {
       case 'popular':
-        sortedArr = productsArr;
+        sortedProducts = products;
         break;
       case 'expensive':
-        sortedArr = productsArr.sort(sortByPriceDecrease);
+        sortedProducts = products.sort(sortByPriceDecrease);
         break;
       case 'cheep':
-        sortedArr = productsArr.sort(sortByPriceIncrease);
+        sortedProducts = products.sort(sortByPriceIncrease);
         break;
       case 'rating':
-        sortedArr = productsArr.sort(sortByRatingDecrease);
+        sortedProducts = products.sort(sortByRatingDecrease);
         break;
     }
 
-    return sortedArr;
+    return sortedProducts;
   };
 
   // Сортирует товары по возрастанию цены
@@ -164,7 +154,7 @@
     });
     selectedProductProperties.length = 0;
     filterSortPopularBtnElement.checked = true;
-    window.filter.setPriceFilterDefault();
+    window.filter.setPriceRangeDefault();
   };
 
   // Сбрасывает строгие фильтры "Только избранное" и "В наличии"
@@ -179,9 +169,8 @@
     resetNotStrictFilters();
     resetStrictFilters();
     hideFilterEmptyMsg();
-    window.catalog.deleteProductCards();
-    window.catalog.renderProductCards(window.data.productsArray);
-    // updateCards();
+    window.catalog.deleteCards();
+    window.catalog.renderCards(window.data.products);
   };
 
   // Добавляет обработчик события клик на кнопку "Показать всё"
@@ -189,20 +178,20 @@
 
   // Отображает сообщение о том, что ни один товар не подходит под выбранные фильтры
   var showFilterEmptyMsg = function () {
-    var emptyFilterMsg = catalogListElement.querySelector('.catalog__empty-filter');
-    if (emptyFilterMsg === null) {
-      var msgElement = filterEmptyMsgTemplate.cloneNode(true);
+    var emptyFilterMsgElement = catalogListElement.querySelector('.catalog__empty-filter');
+    if (emptyFilterMsgElement === null) {
+      var msgElement = filterEmptyMsgTemplateElement.cloneNode(true);
       catalogListElement.appendChild(msgElement);
     } else {
-      emptyFilterMsg.classList.remove('visually-hidden');
+      emptyFilterMsgElement.classList.remove('visually-hidden');
     }
   };
 
   // Скрывает сообщение о том, что ни один товар не подходит под выбранные фильтры
   var hideFilterEmptyMsg = function () {
-    var emptyFilterMsg = catalogListElement.querySelector('.catalog__empty-filter');
-    if (emptyFilterMsg !== null) {
-      emptyFilterMsg.classList.add('visually-hidden');
+    var emptyFilterMsgElement = catalogListElement.querySelector('.catalog__empty-filter');
+    if (emptyFilterMsgElement !== null) {
+      emptyFilterMsgElement.classList.add('visually-hidden');
     }
   };
 
@@ -224,11 +213,11 @@
   };
 
   // Условие фильтрации товаров по типу
-  var setProductTypeFilter = function (productKind, typesArr) {
-    if (typesArr.length === 0) {
+  var setProductTypeFilter = function (productKind, types) {
+    if (types.length === 0) {
       return true;
     } else {
-      var typeIndex = typesArr.indexOf(productKind);
+      var typeIndex = types.indexOf(productKind);
       if (typeIndex < 0) {
         return false;
       } else {
@@ -255,12 +244,12 @@
   };
 
   // Условие фильтрации товаров по составу
-  var setPropertyFilter = function (productProperty, propertiesArr) {
+  var setPropertyFilter = function (productProperty, properties) {
     var result;
-    if (propertiesArr.length === 0) {
+    if (properties.length === 0) {
       result = true;
     } else {
-      result = propertiesArr.every(function (selectedProperty) {
+      result = properties.every(function (selectedProperty) {
         return productProperty[selectedProperty] === propertiesToNutritionFacts[selectedProperty];
       });
     }
@@ -277,51 +266,49 @@
     elem.addEventListener('change', onPropertyChange);
   });
 
-  // Механизм перетаскивания ползунков фильтра по цене
-  var addRangeBtnHandlers = function () {
-    for (var i = 0; i < rangeBtnElements.length; i++) {
-      rangeBtnElements[i].addEventListener('mousedown', function (evt) {
-        evt.preventDefault();
-        evt.target.focus();
-        resetStrictFilters();
+  // Добавляет обработчики перетаскивания на ползунки слайдера фильтра цены
+  rangeBtnElements.forEach(function (rangeBtn) {
+    rangeBtn.addEventListener('mousedown', function (evt) {
+      evt.preventDefault();
+      evt.target.focus();
+      resetStrictFilters();
 
-        var startCoords = {
-          x: evt.clientX,
+      var startCoords = {
+        x: evt.clientX,
+        y: evt.target.offsetTop
+      };
+
+      var onMouseMove = function (moveEvt) {
+        moveEvt.preventDefault();
+        var shift = {
+          x: startCoords.x - moveEvt.clientX,
+          y: 0
+        };
+
+        startCoords = {
+          x: moveEvt.clientX,
           y: evt.target.offsetTop
         };
 
-        var onMouseMove = function (moveEvt) {
-          moveEvt.preventDefault();
-          var shift = {
-            x: startCoords.x - moveEvt.clientX,
-            y: 0
-          };
+        evt.target.style.left = (evt.target.offsetLeft - shift.x) + 'px';
+        evt.target.style.top = evt.target.offsetTop + 'px';
+        limitRangeBtnMovement(evt.target);
+        setPriceValue(evt.target);
+        changeRangeLineFill();
+      };
 
-          startCoords = {
-            x: moveEvt.clientX,
-            y: evt.target.offsetTop
-          };
+      var onMouseUp = function (upEvt) {
+        upEvt.preventDefault();
+        setPriceValue(evt.target);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        updateCards();
+      };
 
-          evt.target.style.left = (evt.target.offsetLeft - shift.x) + 'px';
-          evt.target.style.top = evt.target.offsetTop + 'px';
-          limitRangeBtnMovement(evt.target);
-          setPriceValue(evt.target);
-          changeRangeLineFill();
-        };
-
-        var onMouseUp = function (upEvt) {
-          upEvt.preventDefault();
-          setPriceValue(evt.target);
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-          updateCards();
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      });
-    }
-  };
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
 
   // Ограничивает область перетаскивания ползунков фильтра по цене
   var limitRangeBtnMovement = function (btn) {
@@ -339,7 +326,7 @@
   // Задает значение полей наибольшей и наименьшей цены при перемещении ползунка фильтра по цене
   var setPriceValue = function (btn) {
     var positionX = btn.offsetLeft;
-    var priceValue = parseInt(((positionX * maxPrice) / rangeWidth), 10);
+    var priceValue = Math.round((positionX * maxPrice) / rangeWidth);
 
     if (btn === rangeLeftBtnElement) {
       rangeMinPriceElement.textContent = priceValue;
@@ -365,21 +352,18 @@
     }
   };
 
-  // Добавляет обработчики на ползунки слайдера фильтра цены
-  addRangeBtnHandlers();
-
   // Отрисовывает карточки товаров, добавленных в "Избранное"
   var showFavoriteProducts = function (evt) {
     if (evt.target.checked === true) {
-      window.catalog.deleteProductCards();
+      window.catalog.deleteCards();
       resetNotStrictFilters();
       filterAvailabilityElement.checked = false;
-      if (window.data.favoriteProductsArray.length === 0) {
+      if (window.data.favorites.length === 0) {
         showFilterEmptyMsg();
       } else {
         hideFilterEmptyMsg();
       }
-      window.catalog.renderProductCards(window.data.favoriteProductsArray);
+      window.catalog.renderCards(window.data.favorites);
       catalogListElement.addEventListener('click', removeProductFromFavoriteFilter);
     } else {
       updateCards();
@@ -403,9 +387,8 @@
   filterFavoriteElement.addEventListener('change', showFavoriteProducts);
 
   // Условие фильтрации товаров по наличию
-  var filterByAvalaibility = function (arr) {
-    var products = arr.slice();
-    var filteredProducts = products.filter(function (it) {
+  var filterByAvalaibility = function (products) {
+    var filteredProducts = products.slice().filter(function (it) {
       return it.amount > 0;
     });
     return filteredProducts;
@@ -414,12 +397,12 @@
   // Отрисовывает карточки товров, количество которых больше 0
   var showAvailableProducts = function (evt) {
     if (evt.target.checked === true) {
-      window.catalog.deleteProductCards();
+      window.catalog.deleteCards();
       resetNotStrictFilters();
       hideFilterEmptyMsg();
       filterFavoriteElement.checked = false;
-      var availableProducts = filterByAvalaibility(window.data.productsArray);
-      window.catalog.renderProductCards(availableProducts);
+      var availableProducts = filterByAvalaibility(window.data.products);
+      window.catalog.renderCards(availableProducts);
     } else {
       updateCards();
     }
@@ -432,7 +415,7 @@
   var calculateFilteredItemsCount = function (filterElements, callback) {
     filterElements.forEach(function (element) {
       var counter = element.parentElement.querySelector('.input-btn__item-count');
-      var products = window.data.productsArray.slice();
+      var products = window.data.products.slice();
       var filteredItems = products.filter(function (it) {
         return callback(it, element);
       });
@@ -455,16 +438,16 @@
   // Выводит количество товаров в наличии
   var calculateAvailableItemsCount = function () {
     var counter = filterAvailabilityElement.parentElement.querySelector('.input-btn__item-count');
-    var filteredItems = filterByAvalaibility(window.data.productsArray);
+    var filteredItems = filterByAvalaibility(window.data.products);
     counter.textContent = '(' + filteredItems.length + ')';
   };
 
   window.filter = {
     // Переключает фильтр цены в стартовое состояние
-    setPriceFilterDefault: function () {
-      minPrice = window.data.findMinPrice(window.data.productsArray);
-      maxPrice = window.data.findMaxPrice(window.data.productsArray);
-      rangeLeftBtnElement.style.left = parseInt(((minPrice * rangeWidth) / maxPrice), 10) + 'px';
+    setPriceRangeDefault: function () {
+      minPrice = window.data.findMinPrice(window.data.products);
+      maxPrice = window.data.findMaxPrice(window.data.products);
+      rangeLeftBtnElement.style.left = Math.round((minPrice * rangeWidth) / maxPrice) + 'px';
       rangeRightBtnElement.style.left = MAX_POS_X + 'px';
       changeRangeLineFill();
       setPriceValue(rangeLeftBtnElement);
@@ -474,7 +457,7 @@
     // Выводит количество товаров, добавленных в "Избранное", в блок .input-btn__item-count фильтра "Только избранное"
     calculateFavoriteItemsCount: function () {
       var counter = filterFavoriteElement.parentElement.querySelector('.input-btn__item-count');
-      counter.textContent = '(' + window.data.favoriteProductsArray.length + ')';
+      counter.textContent = '(' + window.data.favorites.length + ')';
     },
 
     // Отображает количество товаров, подходящих под фильтры

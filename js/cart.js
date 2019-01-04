@@ -2,25 +2,24 @@
 
 'use strict';
 (function () {
-  var catalogListElement = document.querySelector('.catalog__cards');
   var cartListElement = document.querySelector('.goods__cards');
-  var emptyCartMsgElement = document.querySelector('.goods__card-empty');
+  var emptyCartMsgElement = cartListElement.querySelector('.goods__card-empty');
   var mainHeaderBasketTotalElement = document.querySelector('.main-header__basket');
   var cartTotalElement = document.querySelector('.goods__total');
   var cartTotalCountElement = cartTotalElement.querySelector('.goods__total-count');
 
   // Отрисовывает карточку товара, добавленного в корзину
   var renderProductInCart = function (productInCart) {
-    var cardElement = window.card.createProductInCartElement(productInCart);
+    var cardElement = window.card.createItemInCart(productInCart);
     cartListElement.appendChild(cardElement);
-    var closeBtn = cardElement.querySelector('.card-order__close');
-    closeBtn.addEventListener('click', onDeleteBtnClick);
-    var arrowBtns = cardElement.querySelectorAll('.card-order__btn');
-    for (var i = 0; i < arrowBtns.length; i++) {
-      arrowBtns[i].addEventListener('click', onArrowBtnClick);
-    }
-    var inputProductCount = cardElement.querySelector('.card-order__count');
-    inputProductCount.addEventListener('change', onInputValueChange);
+    var closeBtnElement = cardElement.querySelector('.card-order__close');
+    closeBtnElement.addEventListener('click', onDeleteBtnClick);
+    var arrowBtnsElements = [].slice.call(cardElement.querySelectorAll('.card-order__btn'));
+    arrowBtnsElements.forEach(function (button) {
+      button.addEventListener('click', onArrowBtnClick);
+    });
+    var inputProductCountElement = cardElement.querySelector('.card-order__count');
+    inputProductCountElement.addEventListener('change', onInputValueChange);
   };
 
   // Показывает или скрывает сообщение о количестве товаров в корзине и итоговой сумме заказа
@@ -37,10 +36,10 @@
   var changeCartTotal = function () {
     var inCartAmount = 0;
     var orderTotal = 0;
-    for (var i = 0; i < window.data.productsInCartArray.length; i++) {
-      inCartAmount += window.data.productsInCartArray[i].orderedAmount;
-      orderTotal += window.data.productsInCartArray[i].price * window.data.productsInCartArray[i].orderedAmount;
-    }
+    window.data.productsInCart.forEach(function (product) {
+      inCartAmount += product.orderedAmount;
+      orderTotal += product.price * product.orderedAmount;
+    });
 
     var ending = '';
     var amount = inCartAmount.toString().split('');
@@ -59,36 +58,32 @@
     cartTotalCountElement.textContent = 'Итого за ' + inCartAmount + ' товар' + ending + ': ';
     var totalPrice = '<span class="goods__price"></span>';
     cartTotalCountElement.insertAdjacentHTML('beforeEnd', totalPrice);
-    document.querySelector('.goods__price').textContent = orderTotal + ' ₽';
+    cartTotalCountElement.querySelector('.goods__price').textContent = orderTotal + ' ₽';
   };
 
   // Обработчик события клик на кнопке с крестиком в карточке товара в корзине
   var onDeleteBtnClick = function (evt) {
     if (evt.target.classList.contains('card-order__close')) {
-      var card = evt.target.closest('.goods_card');
-      deleteProductInCart(card);
+      var cardElement = evt.target.closest('.goods_card');
+      deleteProductInCart(cardElement);
     }
   };
 
   // Удаляет товар из корзины
   var deleteProductInCart = function (productCard) {
     var cardName = productCard.querySelector('.card-order__title').textContent;
+    var orderedProductObj = window.data.findProductObj(window.data.productsInCart, cardName);
+    var productObj = window.data.findProductObj(window.data.products, cardName);
 
-    var orderedProduct = window.data.findRelevantProductObj(window.data.productsInCartArray, cardName);
-    var productAmount = orderedProduct.orderedAmount;
-    window.data.productsInCartArray.splice(window.data.productsInCartArray.indexOf(orderedProduct), 1);
+    window.data.productsInCart.splice(window.data.productsInCart.indexOf(orderedProductObj), 1);
     cartListElement.removeChild(productCard);
+    productObj.amount += orderedProductObj.orderedAmount;
+    window.card.checkAmount(productObj);
 
-    var productObj = window.data.findRelevantProductObj(window.data.productsArray, cardName);
-    productObj.amount += productAmount;
-    var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-    var productCatalogCard = window.card.findRelevantCatalogCard(catalogCards, cardName);
-    window.card.checkProductAmount(productObj, productCatalogCard);
-
-    if (window.data.productsInCartArray.length === 0) {
-      window.cart.showEmptyCartMsg();
+    if (window.data.productsInCart.length === 0) {
+      window.cart.showMsgEmpty();
       hideCartTotal();
-      window.order.deactivateOrderForm();
+      window.order.deactivateForm();
     } else {
       changeCartTotal();
     }
@@ -97,46 +92,42 @@
   // Изменяет количество товара в корзине при нажатии на кнопки со стрелками
   var onArrowBtnClick = function (evt) {
     var btn = evt.target;
-    var card = btn.closest('.goods_card');
-    var cardName = card.querySelector('.card-order__title').textContent;
-    var productObj = window.data.findRelevantProductObj(window.data.productsArray, cardName);
-    var orderedProductObj = window.data.findRelevantProductObj(window.data.productsInCartArray, cardName);
-    var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-    var productCatalogCard = window.card.findRelevantCatalogCard(catalogCards, cardName);
-    var productAmount = card.querySelector('.card-order__count').value;
+    var cardElement = btn.closest('.goods_card');
+    var cardName = cardElement.querySelector('.card-order__title').textContent;
+    var productObj = window.data.findProductObj(window.data.products, cardName);
+    var orderedProductObj = window.data.findProductObj(window.data.productsInCart, cardName);
 
     if (btn.classList.contains('card-order__btn--decrease')) {
       productObj.amount++;
-      productAmount--;
+      orderedProductObj.orderedAmount--;
 
-      if (productAmount === 0) {
-        window.data.productsInCartArray.splice(window.data.productsInCartArray.indexOf(orderedProductObj), 1);
-        cartListElement.removeChild(card);
+      if (orderedProductObj.orderedAmount === 0) {
+        window.data.productsInCart.splice(window.data.productsInCart.indexOf(orderedProductObj), 1);
+        cartListElement.removeChild(cardElement);
       }
 
-      var increaseBtn = card.querySelector('.card-order__btn--increase');
-      if (increaseBtn.hasAttribute('disabled')) {
-        increaseBtn.removeAttribute('disabled');
+      var increaseBtnElement = cardElement.querySelector('.card-order__btn--increase');
+      if (increaseBtnElement.hasAttribute('disabled')) {
+        increaseBtnElement.removeAttribute('disabled');
       }
 
-      if (window.data.productsInCartArray.length === 0) {
-        window.cart.showEmptyCartMsg();
+      if (window.data.productsInCart.length === 0) {
+        window.cart.showMsgEmpty();
         hideCartTotal();
-        window.order.deactivateOrderForm();
+        window.order.deactivateForm();
       }
-    } else if (evt.target.classList.contains('card-order__btn--increase')) {
+    } else if (btn.classList.contains('card-order__btn--increase')) {
       if (productObj.amount > 0) {
         productObj.amount--;
         if (productObj.amount === 0) {
           btn.setAttribute('disabled', 'true');
         }
 
-        productAmount++;
+        orderedProductObj.orderedAmount++;
       }
     }
-    card.querySelector('.card-order__count').value = productAmount;
-    orderedProductObj.orderedAmount = productAmount;
-    window.card.checkProductAmount(productObj, productCatalogCard);
+    cardElement.querySelector('.card-order__count').value = orderedProductObj.orderedAmount;
+    window.card.checkAmount(productObj);
     changeCartTotal();
   };
 
@@ -144,15 +135,13 @@
   // При изменении значения поля меняет количество товара в основном массиве продуктов и массиве продуктов в корзине
   // Ограничивает количество товара, которое можно добавить в корзину
   var onInputValueChange = function (evt) {
-    var input = evt.target;
-    var card = input.closest('.goods_card');
-    var cardName = card.querySelector('.card-order__title').textContent;
-    var productObj = window.data.findRelevantProductObj(window.data.productsArray, cardName);
-    var orderedProductObj = window.data.findRelevantProductObj(window.data.productsInCartArray, cardName);
-    var catalogCards = catalogListElement.querySelectorAll('.catalog__card');
-    var productCatalogCard = window.card.findRelevantCatalogCard(catalogCards, cardName);
+    var inputField = evt.target;
+    var cardElement = inputField.closest('.goods_card');
+    var cardName = cardElement.querySelector('.card-order__title').textContent;
+    var productObj = window.data.findProductObj(window.data.products, cardName);
+    var orderedProductObj = window.data.findProductObj(window.data.productsInCart, cardName);
 
-    var productAmount = parseInt(input.value, 10);
+    var productAmount = parseInt(inputField.value, 10);
     var amountDiff = productAmount - orderedProductObj.orderedAmount;
 
     if (productAmount > 0) {
@@ -163,79 +152,74 @@
         } else if (productObj.amount < amountDiff) {
           orderedProductObj.orderedAmount = productAmount - amountDiff + productObj.amount;
           productObj.amount = 0;
-          input.value = orderedProductObj.orderedAmount;
+          inputField.value = orderedProductObj.orderedAmount;
         }
       } else if (amountDiff < 0) {
         orderedProductObj.orderedAmount = productAmount;
         productObj.amount -= amountDiff;
       }
-      window.card.checkProductAmount(productObj, productCatalogCard);
-      changeCartTotal();
     } else if (productAmount === 0) {
       productObj.amount += orderedProductObj.orderedAmount;
-      window.data.productsInCartArray.splice(window.data.productsInCartArray.indexOf(orderedProductObj), 1);
-      cartListElement.removeChild(card);
-      window.card.checkProductAmount(productObj, productCatalogCard);
-      changeCartTotal();
-      if (window.data.productsInCartArray.length === 0) {
-        window.cart.showEmptyCartMsg();
+      window.data.productsInCart.splice(window.data.productsInCart.indexOf(orderedProductObj), 1);
+      cartListElement.removeChild(cardElement);
+      if (window.data.productsInCart.length === 0) {
+        window.cart.showMsgEmpty();
         hideCartTotal();
       }
     } else if (productAmount < 0) {
-      input.value = 1;
+      inputField.value = 1;
       productAmount = 1;
       productObj.amount += orderedProductObj.orderedAmount - productAmount;
       orderedProductObj.orderedAmount = productAmount;
-      window.card.checkProductAmount(productObj, productCatalogCard);
-      changeCartTotal();
     }
+    window.card.checkAmount(productObj);
+    changeCartTotal();
+  };
+
+  // Cкрывает сообщение о пустой корзине
+  var hideEmptyCartMsg = function () {
+    emptyCartMsgElement.classList.add('visually-hidden');
+    cartListElement.classList.remove('goods__cards--empty');
   };
 
   window.cart = {
-    // Показывает или скрывает сообщение о пустой корзине
-    showEmptyCartMsg: function () {
+    // Показывает сообщение о пустой корзине
+    showMsgEmpty: function () {
       emptyCartMsgElement.classList.remove('visually-hidden');
       cartListElement.classList.add('goods__cards--empty');
       mainHeaderBasketTotalElement.textContent = 'В корзине ничего нет';
     },
 
-    // Cкрывает сообщение о пустой корзине
-    hideEmptyCartMsg: function () {
-      emptyCartMsgElement.classList.add('visually-hidden');
-      cartListElement.classList.remove('goods__cards--empty');
-    },
-
     // Добавляет товар в корзину
-    addProductInCart: function (evt) {
+    addProduct: function (evt) {
       if (evt.target.classList.contains('card__btn')) {
         var inCartBtn = evt.target;
-        var card = inCartBtn.closest('.catalog__card');
-        var cardName = card.querySelector('.card__title').textContent;
-        var productObj = window.data.findRelevantProductObj(window.data.productsArray, cardName);
-        var orderedProductObj = window.data.findRelevantProductObj(window.data.productsInCartArray, cardName);
+        var cardElement = inCartBtn.closest('.catalog__card');
+        var cardName = cardElement.querySelector('.card__title').textContent;
+        var productObj = window.data.findProductObj(window.data.products, cardName);
+        var orderedProductObj = window.data.findProductObj(window.data.productsInCart, cardName);
 
-        if (window.data.productsInCartArray.length === 0 && productObj.amount > 0) {
-          window.cart.hideEmptyCartMsg();
+        if (window.data.productsInCart.length === 0 && productObj.amount > 0) {
+          hideEmptyCartMsg();
           showCartTotal();
-          window.order.activateORderForm();
+          window.order.activateForm();
         }
 
         inCartBtn.blur();
 
         if (productObj.amount > 0) {
           productObj.amount--;
-          window.card.checkProductAmount(productObj, card);
+          window.card.checkAmount(productObj);
           // Проверяет, есть ли уже такой товар в корзине
           if (Boolean(orderedProductObj) === false) {
             orderedProductObj = window.data.createOrderedProduct(productObj);
             orderedProductObj.orderedAmount++;
-            window.data.productsInCartArray.push(orderedProductObj);
+            window.data.productsInCart.push(orderedProductObj);
             renderProductInCart(orderedProductObj);
           } else {
             orderedProductObj.orderedAmount++;
-            var cartCards = document.querySelectorAll('.card-order');
-            var productInCartCard = window.card.findRelevantCardInCart(cartCards, cardName);
-            productInCartCard.querySelector('.card-order__count').value++;
+            var orderedProductCardElement = window.card.findInCart(cardName);
+            orderedProductCardElement.querySelector('.card-order__count').value++;
           }
           changeCartTotal();
         }
@@ -243,13 +227,13 @@
     },
 
     // Удаляет карточки товаров из корзины при успешной отправке заказа
-    clearCart: function () {
-      var cartCardsElements = cartListElement.querySelectorAll('.card-order');
-      for (var i = 0; i < cartCardsElements.length; i++) {
-        cartListElement.removeChild(cartCardsElements[i]);
-      }
-      window.data.productsInCartArray.length = 0;
-      window.cart.showEmptyCartMsg();
+    clear: function () {
+      var cartCardsElements = [].slice.call(cartListElement.querySelectorAll('.card-order'));
+      cartCardsElements.forEach(function (card) {
+        cartListElement.removeChild(card);
+      });
+      window.data.productsInCart.length = 0;
+      window.cart.showMsgEmpty();
       hideCartTotal();
     }
   };
