@@ -323,6 +323,28 @@
     }
   };
 
+  // Находит минимальное значение цены среди товаров
+  var findMinPrice = function (products) {
+    var minimum = products[0].price;
+    products.forEach(function (product) {
+      if (product.price < minimum) {
+        minimum = product.price;
+      }
+    });
+    minPrice = minimum;
+  };
+
+  // Находит максимальное значение цены среди товаров
+  var findMaxPrice = function (products) {
+    var maximum = 0;
+    products.forEach(function (product) {
+      if (product.price > maximum) {
+        maximum = product.price;
+      }
+    });
+    maxPrice = maximum;
+  };
+
   // Задает значение полей наибольшей и наименьшей цены при перемещении ползунка фильтра по цене
   var setPriceValue = function (btn) {
     var positionX = btn.offsetLeft;
@@ -445,8 +467,8 @@
   window.filter = {
     // Переключает фильтр цены в стартовое состояние
     setPriceRangeDefault: function () {
-      minPrice = window.data.findMinPrice(window.data.products);
-      maxPrice = window.data.findMaxPrice(window.data.products);
+      findMinPrice(window.data.products);
+      findMaxPrice(window.data.products);
       rangeLeftBtnElement.style.left = Math.round((minPrice * rangeWidth) / maxPrice) + 'px';
       rangeRightBtnElement.style.left = MAX_POS_X + 'px';
       changeRangeLineFill();

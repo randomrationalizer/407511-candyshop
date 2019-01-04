@@ -102,18 +102,6 @@
         }
       }
       return relevantCardElement;
-    },
-
-    // Находит элемент карточки товара в корзине по названию продукта
-    findInCart: function (productName) {
-      var cardsInCartElements = document.querySelectorAll('.card-order');
-      for (var i = 0; i < cardsInCartElements.length; i++) {
-        if (cardsInCartElements[i].querySelector('.card-order__title').textContent === productName) {
-          var relevantCardElement = cardsInCartElements[i];
-          break;
-        }
-      }
-      return relevantCardElement;
     }
   };
 })();

@@ -34,28 +34,6 @@
         }
       }
       return relevantObj;
-    },
-
-    // Находит минимальное значение цены среди товаров
-    findMinPrice: function (products) {
-      var minPrice = products[0].price;
-      products.forEach(function (product) {
-        if (product.price < minPrice) {
-          minPrice = product.price;
-        }
-      });
-      return minPrice;
-    },
-
-    // Находит максимальное значение цены среди товаров
-    findMaxPrice: function (products) {
-      var maxPrice = 0;
-      products.forEach(function (product) {
-        if (product.price > maxPrice) {
-          maxPrice = product.price;
-        }
-      });
-      return maxPrice;
     }
   };
 })();
