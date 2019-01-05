@@ -41,6 +41,7 @@
       cardElement.querySelector('.card__characteristic').textContent = productSugarContent + '. ' + product.nutritionFacts.energy + ' ккал';
       cardElement.querySelector('.card__composition-list').textContent = product.nutritionFacts.contents + '.';
 
+      cardElement.classList.add('visually-hidden');
       return cardElement;
     },
 
